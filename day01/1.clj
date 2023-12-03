@@ -15,7 +15,6 @@
 
 (defn get-number [^String s]
   (let [numbers (re-seq #"\d" s)
-        _ (println "numbers " numbers)
          get-two-digit-number
            (fn [numbers]
              ((comp #(Integer/parseInt %)
@@ -60,31 +59,29 @@
    "eight" 8
    "nine" 9})
 
+;; I rewrote the original solution, maybe not correct the result
 
 
-(defn generate-regex-pattern
-  "Generates a regex pattern from the keys of a map."
-  [m]
-  (->> (keys m)
-         (join "|")))
+(def regex-pattern
+  (let [reg-core (join "|" (keys map-of-strings))]
+    (re-pattern (str "(?=(" reg-core "))"))))
 
 
-(def new-pattern
-  "get back overlaps too in order"
-  (re-pattern
-   (str "(?=(" (generate-regex-pattern map-of-strings) "))")))
+(defn get-numbers-from-string
+  [nums]
+  (keep (fn [[e m]] (get map-of-strings m)) nums))
 
 
 (defn extract-number-part2 [s]
-  (let [numbers (keep (fn [[_ m]]
-                            (get map-of-strings m))
-                            (re-seq new-pattern s))
-        numbers-handle-nil (if (empty? numbers) 0 numbers)
-        get-two-digit (->> (str (first numbers-handle-nil)
-                                           (last numbers-handle-nil))
-                                    Integer/parseInt)]
-    get-two-digit))
+  (let [extracted-string (re-seq regex-pattern s)
+        numbers (get-numbers-from-string extracted-string)
+        parse-ints (fn [n] (str (first n) (last n)))]
+    (if (empty? numbers)
+      0
+      (->> numbers parse-ints Integer/parseInt))))
 
 
-(defn get-part2-result []
+(defn get-result-of-second-part []
   (reduce + (map extract-number-part2 input-data)))
+
+(get-result-of-second-part)
